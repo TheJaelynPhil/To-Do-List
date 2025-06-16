@@ -1,0 +1,230 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8"/>
+        <title>Jaelyns TO-DO LIST</title>
+        <link href ="file:///Users/jaelynphillips/Desktop/coding-playground/to%20do%20list%20website/test.todolist.html" rel="stylesheet">
+        <style>
+        body {
+            font-family: Arial, sans-serif;
+            background: linear-gradient(228deg, #f6d365 1%, #fda129 100%);
+            color: #777;
+            text-align: center;
+            padding: 50px;
+        }
+
+        h1 {
+            font-size: 35px;
+            color: #fff;
+            margin-bottom: 10px;
+        }
+
+        p {
+            font-size: 16px;
+            color: #fff;
+            margin-bottom: 40px;
+        }
+
+        input {
+            padding: 10px;
+            width: 200px;
+            border: none;
+            border-radius: 8px;
+            font-size: 16px;
+        }
+
+        button {
+            padding: 15px 10px;
+            margin-left: 5px;
+            border: none;
+            border-radius: 9px;
+            background-color: #fda129;
+            color: white;
+            cursor: pointer;
+            transition: 0.3s ease;
+        }
+
+        button:hover {
+            background-color: #45a049; 
+        }
+
+        ul {
+            list-style-type: none;
+            padding: 0;
+            margin-top: 20px;
+            max-width: 600px;
+            margin-left: auto;
+            margin-right: auto;
+        }
+
+        li {
+          list-style: none;
+          background: #f4f4f4;
+          margin: 10px auto;
+          padding: 10px 15px;
+          border-radius: 8px;
+          display: flex;
+          justify-content: space-between;
+          align-items: center;
+          max-width: 400px;
+          box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+        }
+
+        li button {
+            background-color: #ff6b6b;
+            color: white;
+            border: none;
+            padding: 6px 10px;
+            border-radius: 6px;
+            cursor: pointer;
+            transition: background-color 0.2s ease;
+        }
+
+        li button:hover {
+            background-color: #b9b5b5;
+        }
+
+        li.completed span {
+            text-decoration: line-through;
+            color: #aaa;
+        }
+
+        button, li button {
+            color: #ffffff;
+        }
+
+        button, li button {
+            font-weight: bold;
+            font-size: 14px;
+        }
+
+        button, li button {
+            background-color: #333;
+        }
+
+        li.completed {
+            background-color: #d3f4d1;
+        }
+
+        li span {
+            flex-grow: 1;
+            text-align: left;
+            margin-left: 10px;
+        }
+
+        #taskList {
+            max-height: 400px;
+            overflow-y: auto;
+        }
+    </style>
+  </head>
+  <body>
+    <h1>Jaelyns TO-DO List!</h1>
+  <input type="text" id="taskInput" placeholder="Add a new task">
+    <button onclick="addTask()">Add</button>
+    <button onclick="clearAllTasks()">Clear All</button>
+    <ul id="taskList"></ul>
+    <script>
+      let tasks = [];
+    function addTask () {
+        const input = document.getElementById('taskInput');
+        const taskText = input.value.trim();
+
+        if (taskText === "") {
+            alert("Please enter a task!");
+            return;
+        }
+
+        const task = { text: taskText, completed: false, timestamp: new Date ().toLocaleString() };
+        tasks.push(task);
+        saveTasks();
+        renderTask(task);
+        input.value = "";
+    }
+   function saveTasks() {
+       localStorage.setItem("tasks", JSON.stringify(tasks));
+       console.log("Tasks saved");
+  }
+
+  function renderTask(task) {
+    const { text: taskText, completed: isCompleted, timestamp } = task;
+   
+   const li = document.createElement("li");
+
+    const checkbox = document.createElement("input");
+    checkbox.type = "checkbox";
+    checkbox.checked = isCompleted;
+
+    const span = document.createElement("span");
+    span.textContent = taskText;
+    if (isCompleted) span.style.textDecoration = "line-through";
+
+    const time = document.createElement("small");
+    time.textContent = `Added: ${timestamp}`;
+    time.style.display = "block";
+    time.style.fontSize = "12px";
+    time.style.color = "#999";
+
+    checkbox.onchange = () => {
+        const task = tasks.find(t => t.text === taskText);
+        task.completed = checkbox.checked;
+
+        if (checkbox.checked) {
+            span.style.textDecoration = "line-through";
+            li.classList.add("completed");
+        } else {
+            span.style.textDecoration = "none";
+            li.classList.remove("completed");
+        }
+        saveTasks();
+    };
+    const editBtn = document.createElement("button");
+    editBtn.textContent = "Edit";
+    editBtn.onclick = () => {
+        const newTaskText = prompt("Edit your task:", taskText);
+        if (newTaskText && newTaskText.trim() !== "") {
+            const task = tasks.find(t => t.text === taskText);
+            task.text = newTaskText.trim();
+            saveTasks ();
+            //Refresh task list
+            document.getElementById("taskList").innerHTML = "";
+            tasks.forEach(task => renderTask(task));
+        }
+    };
+    li.appendChild(editBtn);
+    const deleteBtn = document.createElement("button");
+    deleteBtn.textContent = "Delete";
+    deleteBtn.onclick = () => {
+      li.remove();
+      tasks = tasks.filter(t => t.text !== taskText);
+      saveTasks();
+    };
+
+    li.appendChild(checkbox);
+    li.appendChild(span); 
+    li.appendChild(time);
+    li.appendChild(editBtn);
+    li.appendChild(deleteBtn);
+    document.getElementById("taskList").appendChild(li);
+  }
+
+  window.onload = function () {
+    const savedTasks = localStorage.getItem('tasks');
+    if (savedTasks) {
+        tasks = JSON.parse(savedTasks);
+        tasks.forEach( task => renderTask(task));
+    }
+  }
+  document.getElementById("taskInput").addEventListener("keypress", function (e) {
+    if (e.key === "Enter") {
+        addTask();
+    }
+  })
+  function clearAllTasks () {
+    tasks = [];
+    saveTasks ();
+    document.getElementById("taskList").innerHTML = "";
+  }
+     </script>
+   </body>
+</html>
