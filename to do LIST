@@ -3,7 +3,6 @@
   <head>
     <meta charset="UTF-8"/>
         <title>Jaelyns TO-DO LIST</title>
-        <link href ="file:///Users/jaelynphillips/Desktop/coding-playground/to%20do%20list%20website/test.todolist.html" rel="stylesheet">
         <style>
         body {
             font-family: Arial, sans-serif;
@@ -17,12 +16,6 @@
             font-size: 35px;
             color: #fff;
             margin-bottom: 10px;
-        }
-
-        p {
-            font-size: 16px;
-            color: #fff;
-            margin-bottom: 40px;
         }
 
         input {
@@ -89,23 +82,6 @@
             color: #aaa;
         }
 
-        button, li button {
-            color: #ffffff;
-        }
-
-        button, li button {
-            font-weight: bold;
-            font-size: 14px;
-        }
-
-        button, li button {
-            background-color: #333;
-        }
-
-        li.completed {
-            background-color: #d3f4d1;
-        }
-
         li span {
             flex-grow: 1;
             text-align: left;
@@ -124,9 +100,11 @@
     <button onclick="addTask()">Add</button>
     <button onclick="clearAllTasks()">Clear All</button>
     <ul id="taskList"></ul>
+
     <script>
       let tasks = [];
-    function addTask () {
+
+      function addTask () {
         const input = document.getElementById('taskInput');
         const taskText = input.value.trim();
 
@@ -135,12 +113,20 @@
             return;
         }
 
-        const task = { text: taskText, completed: false, timestamp: new Date ().toLocaleString() };
+        const task = {
+            id: Date.now(),
+            text: taskText,
+            completed: false,
+            timestamp: new Date().toLocaleString()
+        };
+
         tasks.push(task);
         saveTasks();
         renderTask(task);
         input.value = "";
+        input.focus();
     }
+
    function saveTasks() {
        localStorage.setItem("tasks", JSON.stringify(tasks));
        console.log("Tasks saved");
@@ -149,7 +135,8 @@
   function renderTask(task) {
     const { text: taskText, completed: isCompleted, timestamp } = task;
    
-   const li = document.createElement("li");
+    const li = document.createElement("li");
+    li.dataset.id = task.id;
 
     const checkbox = document.createElement("input");
     checkbox.type = "checkbox";
@@ -157,7 +144,10 @@
 
     const span = document.createElement("span");
     span.textContent = taskText;
-    if (isCompleted) span.style.textDecoration = "line-through";
+    if (isCompleted) {
+    span.style.textDecoration = "line-through";
+    li.classList.add('completed');
+    }
 
     const time = document.createElement("small");
     time.textContent = `Added: ${timestamp}`;
@@ -166,7 +156,8 @@
     time.style.color = "#999";
 
     checkbox.onchange = () => {
-        const task = tasks.find(t => t.text === taskText);
+        const taskId = parseInt(li.dataset.id);
+        const task = tasks.find(t => t.id === taskId);
         task.completed = checkbox.checked;
 
         if (checkbox.checked) {
@@ -178,12 +169,14 @@
         }
         saveTasks();
     };
+
     const editBtn = document.createElement("button");
     editBtn.textContent = "Edit";
     editBtn.onclick = () => {
         const newTaskText = prompt("Edit your task:", taskText);
         if (newTaskText && newTaskText.trim() !== "") {
-            const task = tasks.find(t => t.text === taskText);
+            const taskId= parseInt(li.dataset.id);
+            const task = tasks.find(t => t.id === taskId);
             task.text = newTaskText.trim();
             saveTasks ();
             //Refresh task list
@@ -191,13 +184,15 @@
             tasks.forEach(task => renderTask(task));
         }
     };
-    li.appendChild(editBtn);
+
     const deleteBtn = document.createElement("button");
     deleteBtn.textContent = "Delete";
     deleteBtn.onclick = () => {
-      li.remove();
-      tasks = tasks.filter(t => t.text !== taskText);
-      saveTasks();
+        const taskId = parseInt(li.dataset.id);
+        tasks = tasks.filter(t => t.id !== taskId);
+        saveTasks();
+        document.getElementById("taskList").innerHTML = "";
+        tasks.forEach(task => renderTask(task));
     };
 
     li.appendChild(checkbox);
@@ -215,15 +210,19 @@
         tasks.forEach( task => renderTask(task));
     }
   }
+
   document.getElementById("taskInput").addEventListener("keypress", function (e) {
     if (e.key === "Enter") {
         addTask();
     }
-  })
+  });
+
   function clearAllTasks () {
-    tasks = [];
-    saveTasks ();
-    document.getElementById("taskList").innerHTML = "";
+    if (confirm("Are you sure you want to clear all tasks?")){
+        tasks = [];
+        saveTasks ();
+        document.getElementById("taskList").innerHTML = "";
+    }
   }
      </script>
    </body>
